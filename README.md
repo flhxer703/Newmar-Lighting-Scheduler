@@ -508,17 +508,11 @@ rv-lighting-scenes/
 │   ├── lighting-ui.html            # Complete UI implementation
 │   ├── lighting-ui.css             # UI styling
 │   └── lighting-ui.js              # UI JavaScript
-├── docs/
-│   ├── API.md                      # Detailed API documentation
-│   ├── INTEGRATION.md              # Integration guide
-│   └── TROUBLESHOOTING.md          # Common issues and solutions
-├── examples/
-│   ├── basic-usage.js              # Basic implementation examples
-│   ├── advanced-schedules.js       # Advanced scheduling examples
-│   └── custom-integration.js       # Custom integration examples
-└── tests/
-    ├── controller.test.js          # Unit tests for controller
-    └── integration.test.js         # Integration tests
+└── docs/
+    ├── API.md                      # Detailed API documentation
+    ├── INTEGRATION.md              # Integration guide
+    └── TROUBLESHOOTING.md          # Common issues and solutions
+
 ```
 
 ## Configuration
@@ -667,14 +661,12 @@ window.RV_LIGHTING_DEBUG = true;
 1. Fork the repository
 2. Create a feature branch
 3. Install development dependencies
-4. Run tests before submitting
 
 ### Code Style
 
 - Use ES6+ features
 - Follow JSDoc commenting standards
 - Maintain consistent indentation
-- Add unit tests for new features
 
 ### Submitting Changes
 
@@ -705,7 +697,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Support
 
 - **Documentation**: See `/docs` folder for detailed guides
-- **Examples**: Check `/examples` for implementation patterns
 - **Issues**: Use GitHub Issues for bug reports
 - **Discussions**: Use GitHub Discussions for questions
 
