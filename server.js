@@ -255,6 +255,23 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({
+        error: 'Internal server error',
+        message: err.message
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({
+        error: 'Not found',
+        path: req.path
+    });
+});
+
 // Initialize and start server
 async function start() {
     try {

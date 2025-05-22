@@ -1,0 +1,60 @@
+{
+    "name": "rv-lighting-control",
+    "version": "1.0.0",
+    "description": "Advanced RV lighting control system with scenes and automated scheduling",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "build": "npm run build:css && npm run build:js",
+        "build:css": "postcss src/lighting-ui.css -o public/lighting-ui.css --use autoprefixer",
+        "build:js": "uglifyjs src/RVLightingController.js src/lighting-ui.js -o public/app.min.js",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "lint": "eslint src/ server/ public/js/",
+        "lint:fix": "eslint src/ server/ public/js/ --fix",
+        "docker:build": "docker build -t rv-lighting-control .",
+        "docker:run": "docker run -p 3000:3000 rv-lighting-control"
+    },
+    "keywords": [
+        "rv",
+        "lighting",
+        "automation",
+        "iot",
+        "websocket",
+        "scenes",
+        "scheduling"
+    ],
+    "author": "RV Lighting Team",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.18.2",
+        "joi": "^17.9.2",
+        "helmet": "^7.0.0",
+        "cors": "^2.8.5",
+        "compression": "^1.7.4",
+        "express-rate-limit": "^6.7.0",
+        "winston": "^3.8.2"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22",
+        "jest": "^29.5.0",
+        "eslint": "^8.42.0",
+        "prettier": "^2.8.8",
+        "postcss": "^8.4.24",
+        "autoprefixer": "^10.4.14",
+        "uglify-js": "^3.17.4"
+    },
+    "engines": {
+        "node": ">=16.0.0",
+        "npm": ">=8.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/rv-lighting-control.git"
+    },
+    "bugs": {
+        "url": "https://github.com/yourusername/rv-lighting-control/issues"
+    },
+    "homepage": "https://github.com/yourusername/rv-lighting-control#readme"
+}
