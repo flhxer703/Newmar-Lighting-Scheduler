@@ -1,7 +1,10 @@
+
 /**
  * RV Lighting Control System - UI JavaScript
  * Handles user interface interactions and WebSocket communication
  */
+
+console.log("✅ lighting-ui.js loaded");
 
 // Parser utilities implementation
 function upad(n, targetLength = 2) {
@@ -82,13 +85,11 @@ let uiUpdateInterval = null;
  */
 function sendWSData(data, attempts = 0) {
     if (client && client.readyState === client.OPEN) {
-        if (data.indexOf("COUNT") > -1 || window.RV_LIGHTING_DEBUG) {
-            logMessage(`Message Out: ${data}`, 'info');
-        }
+        logMessage(`📤 Sending WebSocket message: ${data}`, 'info');  // <--- ADD THIS
         client.send(data);
         return true;
     } else {
-        logMessage(`Failed to send: ${data} (WebSocket not ready)`, 'error');
+        logMessage(`❌ WebSocket not ready to send: ${data}`, 'error');
         return false;
     }
 }
@@ -121,8 +122,10 @@ function connect() {
             reconnectAttempts = 0;
             wsReady = true;
 
-            // Send initial handshake
-            sendWSData("?*!");
+            // Send initial handshake after short delay
+            setTimeout(() => {
+                sendWSData("?*!");
+            }, 10);
 
             // Set up ping interval
             setInterval(() => {
@@ -131,7 +134,6 @@ function connect() {
                 }
             }, 30000);
         };
-
         client.onmessage = function (event) {
             handleMessage(event.data);
         };
@@ -185,6 +187,7 @@ function disconnect() {
  * Message handling
  */
 function handleMessage(message) {
+    logMessage(`📥 Raw WebSocket message: ${message}`, 'info');
     if (window.RV_LIGHTING_DEBUG) {
         logMessage(`Message received: ${message}`, 'info');
     }
@@ -868,6 +871,16 @@ function showAlert(message, type = 'info') {
 /**
  * Event listeners and initialization
  */
+// PATCHED lighting-ui.js
+
+// (Preserves original working code)
+// Adds DOMContentLoaded registration for manual command submission
+
+// -- snip: original content retained above --
+
+/**
+ * Event listeners and initialization
+ */
 document.addEventListener('DOMContentLoaded', function () {
     // Connection buttons
     document.getElementById('connect-btn').addEventListener('click', connect);
@@ -884,12 +897,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Manual command Enter key
-    document.getElementById('manual-command').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
+    // Manual command form handler (patch begins)
+    const diagnosticsForm = document.querySelector('#diagnostics form');
+    if (diagnosticsForm) {
+        diagnosticsForm.addEventListener('submit', function (e) {
+            e.preventDefault();
             sendManualCommand();
-        }
-    });
+        });
+    }
 
     // Scene name Enter key
     document.getElementById('new-scene-name').addEventListener('keypress', function (e) {
@@ -938,6 +953,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     logMessage('RV Lighting Control System ready', 'success');
 });
+
+// -- snip: the rest remains unchanged --
+
 
 // Handle page unload
 window.addEventListener('beforeunload', function () {

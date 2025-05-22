@@ -6,17 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RV Lighting Control System</title>
 
-    <!-- External CSS -->
-    <link rel="stylesheet" href="../src/lighting-ui.css">
+    <!-- FIXED CSS PATH -->
+    <link rel="stylesheet" href="/lighting-ui.css">
 
-    <!-- Security and SEO meta tags -->
+    <!-- SEO + Favicon -->
     <meta name="description" content="Advanced RV lighting control system with scenes and automated scheduling">
     <meta name="author" content="RV Lighting Team">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💡%3C/text%3E%3C/svg%3E">
 </head>
 
 <body>
@@ -240,14 +238,7 @@
                         <form onsubmit="sendManualCommand(); return false;">
                             <div class="form-group">
                                 <label for="manual-command">Send Command</label>
-                                <input type="text" id="manual-command" placeholder="GET_LIGHT_COUNT"
-                                    list="common-commands">
-                                <datalist id="common-commands">
-                                    <option value="GET_LIGHT_COUNT">
-                                    <option value="GET_LIGHT_OBJECT[0]">
-                                    <option value="ping">
-                                    <option value="?*!">
-                                </datalist>
+                                <input type="text" id="manual-command" placeholder="Enter any command" />
                             </div>
                             <button type="submit" class="btn btn-primary">Send</button>
                         </form>
@@ -284,8 +275,8 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script src="../src/RVLightingController.js"></script>
-    <script src="../src/lighting-ui.js"></script>
+    <script src="/RVLightingController.js"></script>
+    <script src="/lighting-ui.js"></script>
 
     <!-- Additional utility functions -->
     <script>

@@ -3,8 +3,9 @@ version: '3.8'
 services:
   rv-lighting-control:
     build: .
+    container_name: newmar_lighting
     ports:
-      - "3000:3000"  # Web UI port
+      - "3060:3000"  # Web UI port
     volumes:
       - ./config:/app/config  # Mount config directory
       - ./data:/app/data      # Mount data directory for scenes/schedules
@@ -15,24 +16,6 @@ services:
     networks:
       - rv-network
 
-  # Optional: Add a simple file manager for config editing
-  config-editor:
-    image: filebrowser/filebrowser
-    ports:
-      - "3001:80"
-    volumes:
-      - ./config:/srv/config
-      - ./data:/srv/data
-    environment:
-      - FB_BASEURL=/files
-    restart: unless-stopped
-    networks:
-      - rv-network
-
 networks:
   rv-network:
     driver: bridge
-
-volumes:
-  config:
-  data:
