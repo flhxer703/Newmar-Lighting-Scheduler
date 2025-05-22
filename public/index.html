@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Lighting Control System</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="lighting-ui.css">
+
+    <!-- Security and SEO meta tags -->
+    <meta name="description" content="Advanced RV lighting control system with scenes and automated scheduling">
+    <meta name="author" content="RV Lighting Team">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>🏠 RV Lighting Control System</h1>
+            <p>Advanced lighting scenes and schedules for your RV</p>
+            <div id="connection-status" class="connection-status status-disconnected">
+                <span class="status-indicator disconnected"></span>
+                Disconnected
+            </div>
+        </header>
+
+        <!-- Connection Panel -->
+        <section id="connection-panel" class="connection-panel">
+            <h2>🔌 Connection Settings</h2>
+
+            <form class="connection-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="controller-ip">Controller IP Address</label>
+                    <input type="text" id="controller-ip" placeholder="192.168.1.100" value="192.168.1.100" required>
+                    <small>Usually 192.168.1.100 for most RV systems</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="controller-port">Port</label>
+                    <input type="number" id="controller-port" placeholder="8092" value="8092" min="1" max="65535"
+                        required>
+                    <small>Default: 8092</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="use-ssl">Protocol</label>
+                    <select id="use-ssl">
+                        <option value="false">WebSocket (ws://)</option>
+                        <option value="true">Secure WebSocket (wss://)</option>
+                    </select>
+                    <small>Use secure WebSocket for HTTPS sites</small>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" id="connect-btn" class="btn btn-primary">Connect</button>
+                    <button type="button" id="disconnect-btn" class="btn btn-secondary" disabled>Disconnect</button>
+                </div>
+            </form>
+
+            <!-- Connection Status and Alerts -->
+            <div id="connection-alerts" aria-live="polite"></div>
+
+            <!-- Connection Logs -->
+            <div class="form-group">
+                <h3>📊 Connection Logs</h3>
+                <div id="connection-logs" class="logs-container" role="log" aria-label="Connection logs">
+                    <div class="log-entry log-info">System ready - Enter controller details to connect</div>
+                </div>
+                <button type="button" class="btn btn-secondary"
+                    onclick="document.getElementById('connection-logs').innerHTML = ''">Clear Logs</button>
+            </div>
+        </section>
+
+        <!-- PIN Authentication Modal -->
+        <div id="pin-modal" class="pin-modal" role="dialog" aria-labelledby="pin-modal-title" aria-hidden="true">
+            <div class="pin-content">
+                <h3 id="pin-modal-title">🔐 Enter PIN</h3>
+                <p>Please enter your RV system PIN</p>
+                <input type="password" id="pin-input" class="pin-input" maxlength="6" placeholder="------"
+                    aria-label="System PIN">
+                <div>
+                    <button type="button" id="pin-submit" class="btn btn-primary">Submit</button>
+                    <button type="button" id="pin-cancel" class="btn btn-secondary">Cancel</button>
+                </div>
+                <div id="pin-error" class="alert alert-danger" style="display: none;" role="alert"></div>
+            </div>
+        </div>
+
+        <!-- Main Interface -->
+        <main id="main-interface" class="main-interface">
+            <!-- Tab Navigation -->
+            <nav class="tabs" role="tablist">
+                <button class="tab active" role="tab" aria-selected="true" aria-controls="lights"
+                    onclick="showTab('lights')">💡 Lights</button>
+                <button class="tab" role="tab" aria-selected="false" aria-controls="scenes"
+                    onclick="showTab('scenes')">🎭 Scenes</button>
+                <button class="tab" role="tab" aria-selected="false" aria-controls="schedules"
+                    onclick="showTab('schedules')">⏰ Schedules</button>
+                <button class="tab" role="tab" aria-selected="false" aria-controls="diagnostics"
+                    onclick="showTab('diagnostics')">🔧 Diagnostics</button>
+            </nav>
+
+            <!-- Lights Tab -->
+            <section id="lights" class="tab-content active" role="tabpanel" aria-labelledby="lights-tab">
+                <h2 class="section-title">Light Controls</h2>
+
+                <!-- Quick Actions -->
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Quick Actions</h3>
+                        <div class="button-group">
+                            <button type="button" class="btn btn-success" onclick="allLightsOn()"
+                                title="Turn all lights on">All Lights On</button>
+                            <button type="button" class="btn btn-secondary" onclick="allLightsOff()"
+                                title="Turn all lights off">All Lights Off</button>
+                            <button type="button" class="btn btn-primary" onclick="saveCurrentScene()"
+                                title="Save current lighting as scene">Save Current Scene</button>
+                            <button type="button" class="btn btn-primary" onclick="refreshLights()"
+                                title="Refresh light list">Refresh Lights</button>
+                        </div>
+                    </div>
+
+                    <div class="control-card">
+                        <h3>Import/Export</h3>
+                        <div class="button-group">
+                            <button type="button" class="btn btn-warning" onclick="exportConfig()"
+                                title="Export scenes and schedules">Export Config</button>
+                            <button type="button" class="btn btn-warning" onclick="importConfig()"
+                                title="Import scenes and schedules">Import Config</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Room Lights Container -->
+                <div id="room-lights-container">
+                    <div class="alert alert-warning">
+                        Connect to your RV controller to discover and control lights
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scenes Tab -->
+            <section id="scenes" class="tab-content" role="tabpanel" aria-labelledby="scenes-tab">
+                <h2 class="section-title">Lighting Scenes</h2>
+
+                <!-- Create New Scene -->
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Create New Scene</h3>
+                        <form onsubmit="createScene(); return false;">
+                            <div class="form-group">
+                                <label for="new-scene-name">Scene Name</label>
+                                <input type="text" id="new-scene-name" placeholder="Enter scene name" required
+                                    maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="scene-room-filter">Room Filter (Optional)</label>
+                                <select id="scene-room-filter">
+                                    <option value="">All Rooms</option>
+                                    <option value="0">Living Room</option>
+                                    <option value="1">Kitchen</option>
+                                    <option value="2">Bedroom</option>
+                                    <option value="3">Bath</option>
+                                    <option value="4">Half Bath</option>
+                                    <option value="5">Exterior</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Scene</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Saved Scenes List -->
+                <div id="scenes-list">
+                    <!-- Scenes will be populated here by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Schedules Tab -->
+            <section id="schedules" class="tab-content" role="tabpanel" aria-labelledby="schedules-tab">
+                <h2 class="section-title">Lighting Schedules</h2>
+
+                <!-- Create New Schedule -->
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Create New Schedule</h3>
+                        <form onsubmit="createSchedule(); return false;">
+                            <div class="form-group">
+                                <label for="new-schedule-name">Schedule Name</label>
+                                <input type="text" id="new-schedule-name" placeholder="Enter schedule name" required
+                                    maxlength="50">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Schedule</button>
+                        </form>
+                        <small>Note: This creates a basic daily schedule. Use the API for advanced scheduling.</small>
+                    </div>
+                </div>
+
+                <!-- Saved Schedules List -->
+                <div id="schedules-list">
+                    <!-- Schedules will be populated here by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Diagnostics Tab -->
+            <section id="diagnostics" class="tab-content" role="tabpanel" aria-labelledby="diagnostics-tab">
+                <h2 class="section-title">System Diagnostics</h2>
+
+                <!-- System Status -->
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>System Status</h3>
+                        <dl class="status-list">
+                            <dt>Controller:</dt>
+                            <dd id="controller-status">Disconnected</dd>
+
+                            <dt>Lights Discovered:</dt>
+                            <dd id="lights-count">0</dd>
+
+                            <dt>Active Schedules:</dt>
+                            <dd id="active-schedules-count">0</dd>
+
+                            <dt>WebSocket State:</dt>
+                            <dd id="websocket-state">Closed</dd>
+
+                            <dt>Browser:</dt>
+                            <dd id="browser-info">Loading...</dd>
+                        </dl>
+                    </div>
+
+                    <div class="control-card">
+                        <h3>Manual Commands</h3>
+                        <form onsubmit="sendManualCommand(); return false;">
+                            <div class="form-group">
+                                <label for="manual-command">Send Command</label>
+                                <input type="text" id="manual-command" placeholder="GET_LIGHT_COUNT"
+                                    list="common-commands">
+                                <datalist id="common-commands">
+                                    <option value="GET_LIGHT_COUNT">
+                                    <option value="GET_LIGHT_OBJECT[0]">
+                                    <option value="ping">
+                                    <option value="?*!">
+                                </datalist>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </form>
+                    </div>
+
+                    <div class="control-card">
+                        <h3>Diagnostic Tools</h3>
+                        <div class="button-group">
+                            <button type="button" class="btn btn-warning" onclick="runDiagnostics()">Run
+                                Diagnostics</button>
+                            <button type="button" class="btn btn-secondary" onclick="collectSupportInfo()">Collect
+                                Support Info</button>
+                            <button type="button" class="btn btn-danger" onclick="emergencyReset()">Emergency
+                                Reset</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Logs -->
+                <div class="form-group">
+                    <h3>📊 System Logs</h3>
+                    <div id="system-logs" class="logs-container" role="log" aria-label="System logs">
+                        <div class="log-entry log-info">System diagnostics ready</div>
+                    </div>
+                    <div class="button-group">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('system-logs').innerHTML = ''">Clear Logs</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleDebugMode()">Toggle Debug
+                            Mode</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="RVLightingController.js"></script>
+    <script src="lighting-ui.js"></script>
+
+    <!-- Additional utility functions -->
+    <script>
+        // Utility functions specific to the HTML interface
+
+        function toggleDebugMode() {
+            window.RV_LIGHTING_DEBUG = !window.RV_LIGHTING_DEBUG;
+            if (window.lightingController) {
+                window.lightingController.setDebug(window.RV_LIGHTING_DEBUG);
+            }
+            logMessage(`Debug mode ${window.RV_LIGHTING_DEBUG ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        function runDiagnostics() {
+            // Run comprehensive diagnostics
+            if (typeof runDiagnostics !== 'undefined') {
+                runDiagnostics();
+            } else {
+                logMessage('Diagnostic function not available', 'warning');
+            }
+        }
+
+        function collectSupportInfo() {
+            try {
+                const info = {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent,
+                    url: location.href,
+                    lightingControllerExists: !!window.lightingController,
+                    isInitialized: window.lightingController?.isInitialized || false,
+                    lightsCount: window.lightingController?.lights?.size || 0,
+                    sendWSDataExists: typeof sendWSData === 'function',
+                    parserUtilsExists: typeof parserUtils === 'object',
+                    webSocketState: window.client?.readyState || 'Not available'
+                };
+
+                console.log('📋 Support Information:', info);
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(JSON.stringify(info, null, 2))
+                        .then(() => logMessage('Support info copied to clipboard', 'success'))
+                        .catch(() => logMessage('Failed to copy to clipboard', 'warning'));
+                }
+
+                return info;
+            } catch (error) {
+                logMessage('Failed to collect support info: ' + error.message, 'error');
+            }
+        }
+
+        function emergencyReset() {
+            if (confirm('⚠️ This will reset all data and reload the page. Continue?')) {
+                localStorage.removeItem('rv_lighting_data');
+                sessionStorage.clear();
+
+                if (window.lightingController) {
+                    window.lightingController.cleanup();
+                }
+
+                if (window.client) {
+                    window.client.close();
+                }
+
+                setTimeout(() => location.reload(true), 1000);
+            }
+        }
+
+        // Update browser info on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const browserInfo = `${navigator.userAgent.split(' ').pop()} (${navigator.platform})`;
+            document.getElementById('browser-info').textContent = browserInfo;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Shift + D for diagnostics
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                runDiagnostics();
+            }
+
+            // Ctrl/Cmd + Shift + R for refresh lights
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+                e.preventDefault();
+                refreshLights();
+            }
+        });
+
+        // Handle visibility change (page focus/blur)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && window.lightingController) {
+                // Refresh status when page becomes visible
+                setTimeout(() => {
+                    if (window.lightingController.isInitialized) {
+                        updateSystemStatus();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+
+</html>

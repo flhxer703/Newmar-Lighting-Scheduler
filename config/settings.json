@@ -1,0 +1,43 @@
+{
+    "connection": {
+        "controller_ip": "192.168.1.100",
+        "controller_port": 8092,
+        "use_ssl": false,
+        "auto_connect": true,
+        "reconnect_attempts": 5,
+        "ping_interval": 30000
+    },
+    "authentication": {
+        "pin": "123456",
+        "remember_pin": true,
+        "session_timeout": 3600000
+    },
+    "ui": {
+        "theme": "default",
+        "show_diagnostics": true,
+        "default_tab": "lights",
+        "room_order": [
+            "Living Room",
+            "Kitchen",
+            "Bedroom",
+            "Bath",
+            "Half Bath",
+            "Exterior"
+        ]
+    },
+    "scheduling": {
+        "enabled": true,
+        "check_interval": 60000,
+        "timezone": "America/New_York"
+    },
+    "backup": {
+        "auto_backup": true,
+        "backup_interval": 86400000,
+        "max_backups": 10
+    },
+    "advanced": {
+        "debug_mode": false,
+        "log_level": "info",
+        "websocket_timeout": 10000
+    }
+}
