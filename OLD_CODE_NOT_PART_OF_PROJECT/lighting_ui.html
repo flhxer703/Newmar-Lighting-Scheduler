@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RV Lighting Control System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .connection-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .status-disconnected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-connecting {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .status-connected {
+            background: #28a745;
+            color: white;
+        }
+
+        .connection-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .connection-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pin-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .pin-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .pin-input {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            width: 200px;
+        }
+
+        .main-interface {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .room-lights {
+            margin-bottom: 20px;
+        }
+
+        .room-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .light-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 15px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .light-name {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+
+        .light-brightness {
+            width: 100px;
+            margin: 0 10px;
+        }
+
+        .light-toggle {
+            padding: 5px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            min-width: 60px;
+        }
+
+        .light-toggle.on {
+            background: #28a745;
+            color: white;
+        }
+
+        .light-toggle.off {
+            background: #6c757d;
+            color: white;
+        }
+
+        .scene-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .scene-info h4 {
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .scene-info p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .scene-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .logs-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .log-error {
+            color: #f56565;
+        }
+
+        .log-success {
+            color: #68d391;
+        }
+
+        .log-info {
+            color: #63b3ed;
+        }
+
+        @media (max-width: 768px) {
+            .connection-form {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .light-control {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 RV Lighting Control System</h1>
+            <p>Advanced lighting scenes and schedules for your RV</p>
+            <div id="connection-status" class="connection-status status-disconnected">
+                Disconnected
+            </div>
+        </div>
+
+        <!-- Connection Panel -->
+        <div id="connection-panel" class="connection-panel">
+            <h2>🔌 Connection Settings</h2>
+            <div class="connection-form">
+                <div class="form-group">
+                    <label for="controller-ip">Controller IP Address</label>
+                    <input type="text" id="controller-ip" placeholder="192.168.1.100" value="192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label for="controller-port">Port</label>
+                    <input type="number" id="controller-port" placeholder="8092" value="8092">
+                </div>
+                <div class="form-group">
+                    <label for="use-ssl">Protocol</label>
+                    <select id="use-ssl">
+                        <option value="false">WebSocket (ws://)</option>
+                        <option value="true">Secure WebSocket (wss://)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button id="connect-btn" class="btn btn-primary">Connect</button>
+                    <button id="disconnect-btn" class="btn btn-secondary" disabled>Disconnect</button>
+                </div>
+            </div>
+
+            <div id="connection-alerts"></div>
+
+            <div class="form-group">
+                <h3>📊 Connection Logs</h3>
+                <div id="connection-logs" class="logs-container">
+                    <div class="log-entry log-info">System ready - Enter controller details to connect</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PIN Modal -->
+        <div id="pin-modal" class="pin-modal">
+            <div class="pin-content">
+                <h3>🔐 Enter PIN</h3>
+                <p>Please enter your RV system PIN</p>
+                <input type="password" id="pin-input" class="pin-input" maxlength="6" placeholder="------">
+                <div>
+                    <button id="pin-submit" class="btn btn-primary">Submit</button>
+                    <button id="pin-cancel" class="btn btn-secondary">Cancel</button>
+                </div>
+                <div id="pin-error" style="color: #dc3545; margin-top: 10px; display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Main Interface -->
+        <div id="main-interface" class="main-interface">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('lights')">💡 Lights</button>
+                <button class="tab" onclick="showTab('scenes')">🎭 Scenes</button>
+                <button class="tab" onclick="showTab('schedules')">⏰ Schedules</button>
+                <button class="tab" onclick="showTab('diagnostics')">🔧 Diagnostics</button>
+            </div>
+
+            <!-- Lights Tab -->
+            <div id="lights" class="tab-content active">
+                <h2 class="section-title">Light Controls</h2>
+
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Quick Actions</h3>
+                        <button class="btn btn-success" onclick="allLightsOn()">All Lights On</button>
+                        <button class="btn btn-secondary" onclick="allLightsOff()">All Lights Off</button>
+                        <button class="btn btn-primary" onclick="saveCurrentScene()">Save Current Scene</button>
+                        <button class="btn btn-primary" onclick="refreshLights()">Refresh Lights</button>
+                    </div>
+                </div>
+
+                <div id="room-lights-container">
+                    <div class="alert alert-warning">
+                        Connect to your RV controller to discover and control lights
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scenes Tab -->
+            <div id="scenes" class="tab-content">
+                <h2 class="section-title">Lighting Scenes</h2>
+
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Create New Scene</h3>
+                        <div class="form-group">
+                            <label>Scene Name</label>
+                            <input type="text" id="new-scene-name" placeholder="Enter scene name">
+                        </div>
+                        <div class="form-group">
+                            <label>Room Filter (Optional)</label>
+                            <select id="scene-room-filter">
+                                <option value="">All Rooms</option>
+                                <option value="0">Living Room</option>
+                                <option value="1">Kitchen</option>
+                                <option value="2">Bedroom</option>
+                                <option value="3">Bath</option>
+                                <option value="4">Half Bath</option>
+                                <option value="5">Exterior</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="createScene()">Create Scene</button>
+                    </div>
+                </div>
+
+                <div id="scenes-list">
+                    <!-- Scenes will be populated here -->
+                </div>
+            </div>
+
+            <!-- Schedules Tab -->
+            <div id="schedules" class="tab-content">
+                <h2 class="section-title">Lighting Schedules</h2>
+
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>Create New Schedule</h3>
+                        <div class="form-group">
+                            <label>Schedule Name</label>
+                            <input type="text" id="new-schedule-name" placeholder="Enter schedule name">
+                        </div>
+                        <button class="btn btn-primary" onclick="openScheduleModal()">Create Schedule</button>
+                    </div>
+                </div>
+
+                <div id="schedules-list">
+                    <!-- Schedules will be populated here -->
+                </div>
+            </div>
+
+            <!-- Diagnostics Tab -->
+            <div id="diagnostics" class="tab-content">
+                <h2 class="section-title">System Diagnostics</h2>
+
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <h3>System Status</h3>
+                        <p>Controller: <span id="controller-status">Disconnected</span></p>
+                        <p>Lights Discovered: <span id="lights-count">0</span></p>
+                        <p>Active Schedules: <span id="active-schedules-count">0</span></p>
+                        <p>WebSocket State: <span id="websocket-state">Closed</span></p>
+                    </div>
+
+                    <div class="control-card">
+                        <h3>Manual Commands</h3>
+                        <div class="form-group">
+                            <label>Send Command</label>
+                            <input type="text" id="manual-command" placeholder="GET_LIGHT_COUNT">
+                        </div>
+                        <button class="btn btn-primary" onclick="sendManualCommand()">Send</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <h3>📊 System Logs</h3>
+                    <div id="system-logs" class="logs-container">
+                        <div class="log-entry log-info">System diagnostics ready</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parser utilities implementation
+        function upad(n, targetLength = 2) {
+            if (n.length > targetLength) throw new Error("target length smaller than length of n!");
+            return ("0".repeat(targetLength - n.length) + n);
+        }
+
+        function u16toHex(value) {
+            var temp1 = upad((value % 256).toString(16).toUpperCase());
+            var temp2 = upad(Math.floor(value / 256).toString(16).toUpperCase());
+            return temp1 + temp2;
+        }
+
+        function hexToU16(hex) {
+            byte1 = parseInt(hex.substring(0, 2), 16);
+            byte2 = parseInt(hex.substring(2, 4), 16);
+            return byte1 + 256 * byte2;
+        }
+
+        function packEvent(...args) {
+            let val = args.reduce((previous, current) => {
+                return previous | current;
+            });
+            let hex = val.toString(16).toUpperCase();
+            let phex = upad(hex, 4);
+            return `0x${phex}`;
+        }
+
+        function ESET_INSTANCE(instance) {
+            return (Math.round(instance) & 0xFF) << 8;
+        }
+
+        function ESET_INDEX(index) {
+            return ((Math.round(index) - 1) & 0xFF) << 8;
+        }
+
+        function ESET_BRIGHTNESS(brightness) {
+            return Math.round(brightness) & 0xFF;
+        }
+
+        function ESET_LEVEL(level) {
+            return (Math.round(level) & 0xF);
+        }
+
+        function ESET_BOOLEAN(trueval, falseval) {
+            return ((bool) => bool ? trueval : falseval);
+        }
+
+        const parserUtils = {
+            ESET_INSTANCE,
+            ESET_INDEX,
+            ESET_BRIGHTNESS,
+            ESET_LEVEL,
+            ESET_TURN_ON_OFF: ESET_BOOLEAN(1, 2),
+            ESET_ENABLE_DISABLE: ESET_BOOLEAN(1, 2),
+            ESET_LOCK_UNLOCK: ESET_BOOLEAN(1, 0),
+            packEvent,
+            u16toHex,
+            hexToU16,
+            upad
+        };
+
+        // Global variables
+        let client = null;
+        let lightingController = null;
+        let connectionState = 'disconnected';
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 5;
+        let reconnectInterval = null;
+        let wsReady = false;
+
+        // WebSocket implementation
+        function sendWSData(data, attempts = 0) {
+            if (client && client.readyState === client.OPEN) {
+                if (data.indexOf("COUNT") > -1)
+                    logMessage(`Message Out: ${data}`, 'info');
+                client.send(data);
+                return true;
+            } else {
+                logMessage(`Failed to send: ${data} (WebSocket not ready)`, 'error');
+                return false;
+            }
+        }
+
+        // RV Lighting Controller implementation
+        class RVLightingController {
+            constructor() {
+                this.lights = new Map();
+                this.scenes = new Map();
+                this.schedules = new Map();
+                this.activeSchedules = new Set();
+                this.scheduleIntervals = new Map();
+                this.isInitialized = false;
+
+                this.rooms = {
+                    LIVING_ROOM: 0,
+                    KITCHEN: 1,
+                    BEDROOM: 2,
+                    BATH: 3,
+                    HALF_BATH: 4,
+                    EXTERIOR: 5
+                };
+
+                this.roomNames = {
+                    0: "Living Room",
+                    1: "Kitchen",
+                    2: "Bedroom",
+                    3: "Bath",
+                    4: "Half Bath",
+                    5: "Exterior"
+                };
+
+                this.loadSavedData();
+            }
+
+            async initialize() {
+                return new Promise((resolve, reject) => {
+                    logMessage("Initializing RV Lighting Controller...", 'info');
+
+                    // Set up event listener for light count
+                    document.body.addEventListener('GET_LIGHT_COUNT', (e) => {
+                        const count = parseInt(e.detail);
+                        logMessage(`Discovered ${count} lights`, 'success');
+                        let receivedCount = 0;
+
+                        // Get each light object
+                        for (let i = 0; i < count; i++) {
+                            const eventName = `GET_LIGHT_OBJECT[${i}]`;
+
+                            const handler = (e) => {
+                                try {
+                                    const lightObject = JSON.parse(e.detail);
+
+                                    // Store light info
+                                    this.lights.set(lightObject.index, {
+                                        name: lightObject.name.replace("|", " "),
+                                        index: lightObject.index,
+                                        instance: lightObject.instance,
+                                        command: lightObject.command,
+                                        room: lightObject.room_loc,
+                                        roomName: this.roomNames[lightObject.room_loc],
+                                        isDimmer: parseInt(lightObject.command) === 0,
+                                        currentBrightness: 0
+                                    });
+
+                                    receivedCount++;
+                                    logMessage(`Light ${i}: ${lightObject.name.replace("|", " ")}`, 'info');
+
+                                    if (receivedCount === count) {
+                                        this.isInitialized = true;
+                                        logMessage("Lighting controller initialized successfully", 'success');
+                                        this.displayLights();
+                                        this.updateSystemStatus();
+                                        resolve(this.lights);
+                                    }
+                                } catch (error) {
+                                    logMessage(`Error parsing light object ${i}: ${error.message}`, 'error');
+                                }
+
+                                document.body.removeEventListener(eventName, handler);
+                            };
+
+                            document.body.addEventListener(eventName, handler);
+                            sendWSData(`GET_LIGHT_OBJECT[${i}]`);
+                        }
+                    });
+
+                    // Request light count to start discovery
+                    sendWSData("GET_LIGHT_COUNT");
+
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        if (!this.isInitialized) {
+                            reject(new Error("Lighting system initialization timeout"));
+                        }
+                    }, 10000);
+                });
+            }
+
+            setLightBrightness(lightIndex, brightness) {
+                const light = this.lights.get(lightIndex);
+                if (!light) {
+                    logMessage(`Light ${lightIndex} not found`, 'error');
+                    return false;
+                }
+
+                brightness = Math.max(0, Math.min(100, brightness));
+
+                if (light.isDimmer) {
+                    const scaledBrightness = Math.round((brightness / 100) * 200);
+                    const command = `HMSEVENT=ENEWMARDIMMERPARSER_SET_BRIGHTNESS_NONSCALED|${parserUtils.packEvent(parserUtils.ESET_INSTANCE(lightIndex), parserUtils.ESET_BRIGHTNESS(scaledBrightness))}`;
+                    sendWSData(command);
+                } else {
+                    const level = brightness > 0 ? 0x01 : 0x00;
+                    const command = `HMSEVENT=ENEWMARDIMMERPARSER_TURN_ON_OFF|${parserUtils.packEvent(parserUtils.ESET_INSTANCE(lightIndex), parserUtils.ESET_LEVEL(level))}`;
+                    sendWSData(command);
+                }
+
+                light.currentBrightness = brightness;
+                logMessage(`Set ${light.name} to ${brightness}%`, 'success');
+                return true;
+            }
+
+            toggleLight(lightIndex, state = null) {
+                const light = this.lights.get(lightIndex);
+                if (!light) return false;
+
+                if (state === null) {
+                    state = light.currentBrightness === 0;
+                }
+
+                const brightness = state ? 100 : 0;
+                return this.setLightBrightness(lightIndex, brightness);
+            }
+
+            async saveScene(sceneName, roomFilter = null) {
+                if (!this.isInitialized) {
+                    logMessage("Lighting controller not initialized", 'error');
+                    return false;
+                }
+
+                const lightStates = [];
+
+                for (const light of this.lights.values()) {
+                    if (roomFilter !== null && light.room !== roomFilter) continue;
+
+                    lightStates.push({
+                        index: light.index,
+                        name: light.name,
+                        brightness: light.currentBrightness,
+                        room: light.room
+                    });
+                }
+
+                const scene = {
+                    name: sceneName,
+                    created: new Date().toISOString(),
+                    room: roomFilter,
+                    lights: lightStates
+                };
+
+                this.scenes.set(sceneName, scene);
+                this.saveToStorage();
+
+                logMessage(`Scene "${sceneName}" saved with ${lightStates.length} lights`, 'success');
+                this.displayScenes();
+                return true;
+            }
+
+            loadScene(sceneName) {
+                const scene = this.scenes.get(sceneName);
+                if (!scene) {
+                    logMessage(`Scene "${sceneName}" not found`, 'error');
+                    return false;
+                }
+
+                logMessage(`Loading scene: ${sceneName}`, 'info');
+
+                for (const lightState of scene.lights) {
+                    this.setLightBrightness(lightState.index, lightState.brightness);
+                }
+
+                return true;
+            }
+
+            allLightsOff() {
+                for (const light of this.lights.values()) {
+                    this.setLightBrightness(light.index, 0);
+                }
+                logMessage("All lights turned off", 'info');
+            }
+
+            allLightsOn() {
+                for (const light of this.lights.values()) {
+                    this.setLightBrightness(light.index, 100);
+                }
+                logMessage("All lights turned on", 'info');
+            }
+
+            getAllLights() {
+                return Array.from(this.lights.values());
+            }
+
+            getLightsByRoom(roomId) {
+                return this.getAllLights().filter(light => light.room === roomId);
+            }
+
+            displayLights() {
+                const container = document.getElementById('room-lights-container');
+                const roomsMap = {};
+
+                // Group lights by room
+                this.getAllLights().forEach(light => {
+                    if (!roomsMap[light.roomName]) {
+                        roomsMap[light.roomName] = [];
+                    }
+                    roomsMap[light.roomName].push(light);
+                });
+
+                // Create HTML for each room
+                let html = '';
+                Object.keys(roomsMap).forEach(roomName => {
+                    html += `
+                        <div class="room-lights">
+                            <div class="room-header">${roomName}</div>
+                            ${roomsMap[roomName].map(light => `
+                                <div class="light-control">
+                                    <span class="light-name">${light.name}</span>
+                                    ${light.isDimmer ?
+                            `<input type="range" class="light-brightness" min="0" max="100" value="${light.currentBrightness}" 
+                                         onchange="setLightBrightness(${light.index}, this.value)">` :
+                            ''
+                        }
+                                    <button class="light-toggle ${light.currentBrightness > 0 ? 'on' : 'off'}" 
+                                            onclick="toggleLight(${light.index}, this)">
+                                        ${light.currentBrightness > 0 ? 'ON' : 'OFF'}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            }
+
+            displayScenes() {
+                const container = document.getElementById('scenes-list');
+                const scenes = Array.from(this.scenes.values());
+
+                let html = '';
+                scenes.forEach(scene => {
+                    const date = new Date(scene.created).toLocaleDateString();
+                    html += `
+                        <div class="scene-item">
+                            <div class="scene-info">
+                                <h4>${scene.name}</h4>
+                                <p>Created: ${date} • ${scene.lights.length} lights</p>
+                            </div>
+                            <div class="scene-actions">
+                                <button class="btn btn-primary" onclick="loadScene('${scene.name}')">Load</button>
+                                <button class="btn btn-danger" onclick="deleteScene('${scene.name}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html || '<div class="alert alert-warning">No scenes saved yet</div>';
+            }
+
+            updateSystemStatus() {
+                document.getElementById('lights-count').textContent = this.lights.size;
+                document.getElementById('controller-status').textContent = this.isInitialized ? 'Connected' : 'Disconnected';
+            }
+
+            saveToStorage() {
+                const data = {
+                    scenes: Array.from(this.scenes.entries()),
+                    schedules: Array.from(this.schedules.entries())
+                };
+                localStorage.setItem('rv_lighting_data', JSON.stringify(data));
+            }
+
+            loadSavedData() {
+                try {
+                    const data = JSON.parse(localStorage.getItem('rv_lighting_data') || '{}');
+
+                    if (data.scenes) {
+                        this.scenes = new Map(data.scenes);
+                    }
+
+                    if (data.schedules) {
+                        this.schedules = new Map(data.schedules);
+                    }
+
+                    logMessage(`Loaded ${this.scenes.size} scenes and ${this.schedules.size} schedules`, 'info');
+                } catch (error) {
+                    logMessage("Error loading saved lighting data: " + error.message, 'error');
+                }
+            }
+        }
+
+        // Connection management
+        function connect() {
+            const ip = document.getElementById('controller-ip').value;
+            const port = document.getElementById('controller-port').value;
+            const useSSL = document.getElementById('use-ssl').value === 'true';
+
+            if (!ip || !port) {
+                showAlert('Please enter IP address and port', 'danger');
+                return;
+            }
+
+            updateConnectionStatus('connecting');
+            logMessage(`Connecting to ${ip}:${port}...`, 'info');
+
+            const protocol = useSSL ? 'wss' : 'ws';
+            const wsUrl = `${protocol}://${ip}:${port}/`;
+
+            try {
+                client = new WebSocket(wsUrl);
+
+                client.onopen = function (event) {
+                    logMessage('WebSocket connected successfully', 'success');
+                    updateConnectionStatus('connected');
+                    reconnectAttempts = 0;
+                    wsReady = true;
+
+                    // Send initial handshake
+                    sendWSData("?*!");
+
+                    // Set up ping interval
+                    setInterval(() => {
+                        if (client && client.readyState === client.OPEN) {
+                            sendWSData("ping");
+                        }
+                    }, 30000);
+                };
+
+                client.onmessage = function (event) {
+                    handleMessage(event.data);
+                };
+
+                client.onerror = function (event) {
+                    logMessage('WebSocket error occurred', 'error');
+                    updateConnectionStatus('disconnected');
+                };
+
+                client.onclose = function (event) {
+                    logMessage(`WebSocket closed (code: ${event.code})`, 'info');
+                    updateConnectionStatus('disconnected');
+                    wsReady = false;
+
+                    // Attempt reconnection
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        logMessage(`Reconnection attempt ${reconnectAttempts}/${maxReconnectAttempts}`, 'info');
+                        setTimeout(() => connect(), 5000);
+                    } else {
+                        logMessage('Max reconnection attempts reached', 'error');
+                    }
+                };
+
+            } catch (error) {
+                logMessage('Failed to create WebSocket connection: ' + error.message, 'error');
+                updateConnectionStatus('disconnected');
+            }
+        }
+
+        function disconnect() {
+            if (client) {
+                client.close();
+                client = null;
+            }
+            updateConnectionStatus('disconnected');
+            wsReady = false;
+            logMessage('Disconnected from controller', 'info');
+        }
+
+        function handleMessage(message) {
+            logMessage(`Message received: ${message}`, 'info');
+
+            // Handle PIN authentication messages
+            if (message === "SHOWPIN" || message === "SHOWPINPAIR") {
+                showPinModal();
+                return;
+            }
+
+            if (message === "CORRECTPIN") {
+                logMessage('PIN accepted', 'success');
+                hidePinModal();
+                showMainInterface();
+                initializeLightingSystem();
+                return;
+            }
+
+            if (message === "INCORRECTPIN") {
+                showPinError('Incorrect PIN entered');
+                return;
+            }
+
+            if (message === "LOCKEDPIN") {
+                showPinError('Too many incorrect attempts. Please wait 5 minutes.');
+                return;
+            }
+
+            // Handle JSON messages
+            try {
+                const parsed = JSON.parse(message);
+                logMessage(`JSON message: ${JSON.stringify(parsed)}`, 'info');
+                return;
+            } catch (e) {
+                // Not JSON, continue processing
+            }
+
+            // Handle key=value messages
+            const parts = message.split("=");
+            if (parts.length > 1) {
+                const event = new CustomEvent(parts[0], { detail: parts[1] });
+                document.body.dispatchEvent(event);
+
+                // Special handling for light object responses
+                if (parts[0].startsWith('GET_LIGHT_OBJECT[')) {
+                    const event = new CustomEvent(parts[0], { detail: parts[1] });
+                    document.body.dispatchEvent(event);
+                }
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            connectionState = status;
+            const statusEl = document.getElementById('connection-status');
+            const connectBtn = document.getElementById('connect-btn');
+            const disconnectBtn = document.getElementById('disconnect-btn');
+            const websocketState = document.getElementById('websocket-state');
+
+            statusEl.className = 'connection-status';
+
+            switch (status) {
+                case 'disconnected':
+                    statusEl.classList.add('status-disconnected');
+                    statusEl.textContent = 'Disconnected';
+                    connectBtn.disabled = false;
+                    disconnectBtn.disabled = true;
+                    if (websocketState) websocketState.textContent = 'Closed';
+                    break;
+                case 'connecting':
+                    statusEl.classList.add('status-connecting');
+                    statusEl.textContent = 'Connecting...';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    if (websocketState) websocketState.textContent = 'Connecting';
+                    break;
+                case 'connected':
+                    statusEl.classList.add('status-connected');
+                    statusEl.textContent = 'Connected';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = false;
+                    if (websocketState) websocketState.textContent = 'Open';
+                    break;
+            }
+        }
+
+        // PIN modal functions
+        function showPinModal() {
+            document.getElementById('pin-modal').style.display = 'block';
+            document.getElementById('pin-input').focus();
+        }
+
+        function hidePinModal() {
+            document.getElementById('pin-modal').style.display = 'none';
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-error').style.display = 'none';
+        }
+
+        function showPinError(message) {
+            const errorEl = document.getElementById('pin-error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function submitPin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin.length < 4) {
+                showPinError('PIN must be at least 4 digits');
+                return;
+            }
+
+            logMessage(`Submitting PIN: ${'*'.repeat(pin.length)}`, 'info');
+            sendWSData(`PIN=${pin}`);
+
+            // Store PIN for reconnection
+            sessionStorage.setItem('enteredPin', pin);
+        }
+
+        function showMainInterface() {
+            document.getElementById('connection-panel').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+        }
+
+        function hideMainInterface() {
+            document.getElementById('connection-panel').style.display = 'block';
+            document.getElementById('main-interface').style.display = 'none';
+        }
+
+        // Initialize lighting system
+        function initializeLightingSystem() {
+            lightingController = new RVLightingController();
+
+            lightingController.initialize().then(() => {
+                logMessage('Lighting system initialized successfully', 'success');
+                showAlert('Lighting system connected and ready!', 'success');
+            }).catch(error => {
+                logMessage('Failed to initialize lighting system: ' + error.message, 'error');
+                showAlert('Failed to initialize lighting system', 'danger');
+            });
+        }
+
+        // UI Functions
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function setLightBrightness(lightIndex, brightness) {
+            if (lightingController) {
+                lightingController.setLightBrightness(lightIndex, parseInt(brightness));
+
+                // Update UI
+                const lightControl = event.target.closest('.light-control');
+                const toggleBtn = lightControl.querySelector('.light-toggle');
+                if (brightness > 0) {
+                    toggleBtn.textContent = 'ON';
+                    toggleBtn.className = 'light-toggle on';
+                } else {
+                    toggleBtn.textContent = 'OFF';
+                    toggleBtn.className = 'light-toggle off';
+                }
+            }
+        }
+
+        function toggleLight(lightIndex, button) {
+            if (!lightingController) return;
+
+            const isOn = button.classList.contains('on');
+            const newState = !isOn;
+
+            lightingController.toggleLight(lightIndex, newState);
+
+            // Update UI
+            const lightControl = button.closest('.light-control');
+            const slider = lightControl.querySelector('.light-brightness');
+
+            if (newState) {
+                button.textContent = 'ON';
+                button.className = 'light-toggle on';
+                if (slider) slider.value = 100;
+            } else {
+                button.textContent = 'OFF';
+                button.className = 'light-toggle off';
+                if (slider) slider.value = 0;
+            }
+        }
+
+        function allLightsOn() {
+            if (lightingController) {
+                lightingController.allLightsOn();
+                // Update UI
+                document.querySelectorAll('.light-brightness').forEach(slider => {
+                    slider.value = 100;
+                });
+                document.querySelectorAll('.light-toggle').forEach(btn => {
+                    btn.textContent = 'ON';
+                    btn.className = 'light-toggle on';
+                });
+            }
+        }
+
+        function allLightsOff() {
+            if (lightingController) {
+                lightingController.allLightsOff();
+                // Update UI
+                document.querySelectorAll('.light-brightness').forEach(slider => {
+                    slider.value = 0;
+                });
+                document.querySelectorAll('.light-toggle').forEach(btn => {
+                    btn.textContent = 'OFF';
+                    btn.className = 'light-toggle off';
+                });
+            }
+        }
+
+        function saveCurrentScene() {
+            const sceneName = prompt('Enter scene name:');
+            if (sceneName && lightingController) {
+                lightingController.saveScene(sceneName).then(() => {
+                    showAlert(`Scene "${sceneName}" saved successfully!`, 'success');
+                });
+            }
+        }
+
+        function createScene() {
+            const name = document.getElementById('new-scene-name').value;
+            const roomFilter = document.getElementById('scene-room-filter').value;
+
+            if (!name) {
+                showAlert('Please enter a scene name', 'warning');
+                return;
+            }
+
+            if (lightingController) {
+                lightingController.saveScene(name, roomFilter || null).then(() => {
+                    showAlert(`Scene "${name}" created successfully!`, 'success');
+                    document.getElementById('new-scene-name').value = '';
+                });
+            }
+        }
+
+        function loadScene(sceneName) {
+            if (lightingController) {
+                lightingController.loadScene(sceneName);
+                showAlert(`Scene "${sceneName}" loaded!`, 'success');
+            }
+        }
+
+        function deleteScene(sceneName) {
+            if (confirm(`Delete scene "${sceneName}"?`)) {
+                if (lightingController) {
+                    lightingController.scenes.delete(sceneName);
+                    lightingController.saveToStorage();
+                    lightingController.displayScenes();
+                    showAlert(`Scene "${sceneName}" deleted!`, 'success');
+                }
+            }
+        }
+
+        function refreshLights() {
+            if (lightingController) {
+                lightingController.initialize().then(() => {
+                    showAlert('Lights refreshed successfully!', 'success');
+                }).catch(error => {
+                    showAlert('Failed to refresh lights', 'danger');
+                });
+            }
+        }
+
+        function sendManualCommand() {
+            const command = document.getElementById('manual-command').value;
+            if (command && sendWSData(command)) {
+                logMessage(`Manual command sent: ${command}`, 'info');
+                document.getElementById('manual-command').value = '';
+            } else {
+                showAlert('Failed to send command', 'danger');
+            }
+        }
+
+        // Utility functions
+        function logMessage(message, type = 'info') {
+            const logsContainer = document.getElementById('connection-logs') || document.getElementById('system-logs');
+            if (!logsContainer) return;
+
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            // Keep only last 100 entries
+            const entries = logsContainer.querySelectorAll('.log-entry');
+            if (entries.length > 100) {
+                entries[0].remove();
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertsContainer = document.getElementById('connection-alerts');
+            if (!alertsContainer) return;
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+
+            alertsContainer.appendChild(alert);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 5000);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            // Connection buttons
+            document.getElementById('connect-btn').addEventListener('click', connect);
+            document.getElementById('disconnect-btn').addEventListener('click', disconnect);
+
+            // PIN modal
+            document.getElementById('pin-submit').addEventListener('click', submitPin);
+            document.getElementById('pin-cancel').addEventListener('click', hidePinModal);
+
+            // PIN input Enter key
+            document.getElementById('pin-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    submitPin();
+                }
+            });
+
+            // Manual command Enter key
+            document.getElementById('manual-command').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    sendManualCommand();
+                }
+            });
+
+            // Load saved connection settings
+            const savedIP = localStorage.getItem('rv_controller_ip');
+            const savedPort = localStorage.getItem('rv_controller_port');
+            const savedSSL = localStorage.getItem('rv_controller_ssl');
+
+            if (savedIP) document.getElementById('controller-ip').value = savedIP;
+            if (savedPort) document.getElementById('controller-port').value = savedPort;
+            if (savedSSL) document.getElementById('use-ssl').value = savedSSL;
+
+            // Save connection settings on change
+            document.getElementById('controller-ip').addEventListener('change', function () {
+                localStorage.setItem('rv_controller_ip', this.value);
+            });
+            document.getElementById('controller-port').addEventListener('change', function () {
+                localStorage.setItem('rv_controller_port', this.value);
+            });
+            document.getElementById('use-ssl').addEventListener('change', function () {
+                localStorage.setItem('rv_controller_ssl', this.value);
+            });
+
+            logMessage('RV Lighting Control System ready', 'success');
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', function () {
+            if (client) {
+                client.close();
+            }
+        });
+    </script>
+</body>
+
+</html>
